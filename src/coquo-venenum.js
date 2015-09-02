@@ -1,24 +1,59 @@
 module.exports = (function () {
     'use strict';
 
+    var each = require('pro-singulis');
+
     /**
-     * @class Potion
+     * @class Formula
      */
-    var Potion = function (wrapped) {
-        this.wrapped = wrapped;
+    var Formula = function (base) {
+        var orgCtor = base.constructor;
+
+        this.Ctor = function () {
+            orgCtor.call(this);
+        };
+
+        this.Ctor.prototype = Object.create(base);
     };
 
-    Potion.prototype.brew = function brew(cfg) {
-        return Object.create(this.wrapped);
+    Formula.prototype.brew = function brew(cfg) {
+        return override(new this.Ctor(), cfg);
     };
 
     /**
-     * Wrapps the give value in a potion to allow further magic
+     * Allows overriding methods and properties of an current base object.
+     * For example:
+     * <pre><code>
+     * var newFormula = formula.extend({
+     *   foo: function () { ... },
+     *   ...
+     * });
+     * </code></pre>
+     * @function
      *
-     * @param {Object} wrapped The original basic prototype
-     * @return Potion the wrapper potion
+     * @param {Object} overrides The set of new methods and attributes
+     * @return Formula The new and extended potion formula
      */
-    return function coquoVenenum(wrapped) {
-        return new Potion(wrapped);
+    Formula.prototype.extend = function (overrides) {
+        return new Formula(this.brew(overrides));
+    };
+
+    /** @private */
+    function override(base, overrides) {
+        each(overrides, function (prop, key) {
+            base[key] = prop;
+        });
+
+        return base;
+    }
+
+    /**
+     * Wrapps the give value in a potion formula to allow further magic
+     *
+     * @param {Object} base The original basic prototype
+     * @return Formula the wrapper formula
+     */
+    return function coquoVenenum(base) {
+        return new Formula(base);
     };
 }());

@@ -38,5 +38,8 @@
     "grunt-jasmine-nodejs": "^1.4.2",
     "grunt-template-jasmine-istanbul": "^0.3.4",
     "grunt-template-jasmine-nml": "^1.0.0"
+  },
+  "dependencies": {
+    "pro-singulis": "^1.1.2"
   }
 }
