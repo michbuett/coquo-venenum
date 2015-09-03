@@ -9,21 +9,28 @@ describe('coquo-venenum', function () {
         var base = {};
 
         // execute
-        var potion = coquoVenenum(base);
+        var formula = coquoVenenum(base);
 
         // verify
-        expect(typeof potion).toBe('object');
-        expect(typeof potion.brew).toBe('function');
+        expect(typeof formula).toBe('object');
+        expect(typeof formula.brew).toBe('function');
+    });
+
+    it('throws an error when creating a formula from non object', function () {
+        expect(function () { coquoVenenum(null); }).toThrow('Base hast be an object, "null" given');
+        expect(function () { coquoVenenum(); }).toThrow('Base hast be an object, "undefined" given');
+        expect(function () { coquoVenenum(1); }).toThrow('Base hast be an object, "1" given');
+        expect(function () { coquoVenenum('foo'); }).toThrow('Base hast be an object, "foo" given');
     });
 
     describe('brew', function () {
         var base = {};
-        var potion = coquoVenenum(base);
+        var formula = coquoVenenum(base);
 
         it('preserves the prototype chain', function () {
             // prepare
             // execute
-            var obj = potion.brew();
+            var obj = formula.brew();
 
             // verify
             expect(base.isPrototypeOf(obj)).toBeTruthy();
@@ -32,7 +39,7 @@ describe('coquo-venenum', function () {
         it('allows to override instance properties', function () {
             // prepare
             // execute
-            var obj = potion.brew({
+            var obj = formula.brew({
                 foo: 'foo',
                 bar: 'bar',
                 baz: 'baz',
@@ -43,10 +50,24 @@ describe('coquo-venenum', function () {
             expect(obj.bar).toBe('bar');
             expect(obj.baz).toBe('baz');
         });
+
+        it('allows to pass arguments to the original constructor if neccessary', function () {
+            // prepare
+            var ctor = jasmine.createSpy();
+            var formula = coquoVenenum({
+                constructor: ctor,
+            });
+
+            // execute
+            formula.brew(null, ['arg1', 'arg2', 'arg3']);
+
+            // verfiy
+            expect(ctor).toHaveBeenCalledWith('arg1', 'arg2', 'arg3');
+        });
     });
 
     describe('extend', function () {
-        var potion = coquoVenenum({
+        var formula = coquoVenenum({
             foo: 'foo',
             bar: 'bar',
         });
@@ -54,7 +75,7 @@ describe('coquo-venenum', function () {
         it('allows to add/override properties and methods', function () {
             // prepare
             // execute
-            var obj = potion.extend({
+            var obj = formula.extend({
                 foo: 'foo_sub',
                 bar: 'bar_sub',
                 baz: 'baz',
@@ -66,7 +87,44 @@ describe('coquo-venenum', function () {
             expect(obj.baz).toBe('baz');
         });
 
-        it('', function () {
+        it('preserves the prototype chain', function () {
+            // prepare
+            var base = {};
+
+            // execute
+            var sub = coquoVenenum(base).extend().extend().extend().brew();
+
+            // verify
+            expect(base.isPrototypeOf(sub)).toBeTruthy();
+        });
+
+        it('does not modify the extended potion formula', function () {
+            var sub = formula.extend({
+                baz: 'baz',
+            });
+
+            // verify
+            expect(sub).not.toBe(formula);
+            expect(formula.brew().baz).toBe(undefined);
+            expect(sub.brew().baz).toBe('baz');
+        });
+    });
+
+    describe('onInit', function () {
+        it('allows register one or more callbacks on brewing', function () {
+            // prepare
+            var onInitSpy1 = jasmine.createSpy('onInit1');
+            var onInitSpy2 = jasmine.createSpy('onInit2');
+
+            // execute
+            coquoVenenum({})
+                .onInit(onInitSpy1)
+                .onInit(onInitSpy2)
+                .brew();
+
+            // verify
+            expect(onInitSpy1).toHaveBeenCalled();
+            expect(onInitSpy2).toHaveBeenCalled();
         });
     });
 });
