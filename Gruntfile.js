@@ -64,7 +64,17 @@ module.exports = function (grunt) {
                             }
                         },
                         coverage: 'reports/coverage/coverage.json',
-                        report: 'reports/coverage',
+                        report: [{
+                            type: 'html',
+                            options: {
+                                dir: 'reports/coverage/html',
+                            }
+                        }, {
+                            type: 'lcovonly',
+                            options: {
+                                dir: 'reports/coverage/lcov',
+                            }
+                        }],
                         thresholds: {
                             lines: 95,
                             statements: 95,
@@ -86,7 +96,16 @@ module.exports = function (grunt) {
                     'dist/coquo-venenum.min.js': ['dist/coquo-venenum.js']
                 }
             },
-        }
+        },
+
+        coveralls: {
+            travis: {
+                src: 'reports/coverage/lcov/*.info',
+                options: {
+                    force: true,
+                }
+            }
+        },
     });
 
     grunt.loadNpmTasks('grunt-contrib-watch');
@@ -96,6 +115,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-jasmine-nodejs');
+    grunt.loadNpmTasks('grunt-coveralls');
 
     grunt.registerTask('test', [
         'jshint',
