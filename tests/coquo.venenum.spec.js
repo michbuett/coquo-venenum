@@ -126,6 +126,31 @@ describe('coquo-venenum', function () {
             expect(onInitSpy1).toHaveBeenCalled();
             expect(onInitSpy2).toHaveBeenCalled();
         });
+
+        it('exectutes the the callback in the currect context', function () {
+            // prepare
+            var onInitSpy = jasmine.createSpy('onInit');
+
+            // execute
+            var potion = coquoVenenum({}).whenBrewed(onInitSpy).brew();
+
+            // verify
+            expect(onInitSpy.calls.mostRecent().object).toBe(potion);
+        });
+
+        it('preserves the prototype chain', function () {
+            // prepare
+            var base = {};
+
+            // execute
+            var sub = coquoVenenum(base).whenBrewed(function () {
+                this.foo = 'bar';
+            }).brew();
+
+            // verify
+            expect(base.isPrototypeOf(sub)).toBeTruthy();
+            expect(sub.foo).toBe('bar');
+        });
     });
 
     describe('dispose', function () {
@@ -163,6 +188,30 @@ describe('coquo-venenum', function () {
             expect(potion.ping).toBeFalsy();
             expect(potion.pong).toBeFalsy();
             expect(potion.text).toBe('some text');
+        });
+
+        it('also disposes children', function () {
+            // prepare
+            var dispose1 = jasmine.createSpy('dispose spy #1');
+            var dispose2 = jasmine.createSpy('dispose spy #2');
+            var potion = coquoVenenum({
+                foo: {
+                    dispose: dispose1,
+                },
+            }).brew({
+                bar: {
+                    dispose: dispose2,
+                },
+            });
+
+            // execute
+            potion.dispose();
+
+            // verify
+            expect(potion.foo).toBeFalsy();
+            expect(potion.bar).toBeFalsy();
+            expect(dispose1).toHaveBeenCalled();
+            expect(dispose2).not.toHaveBeenCalled();
         });
     });
 });

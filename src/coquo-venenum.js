@@ -11,12 +11,33 @@ module.exports = (function () {
         var orgCtor = cfg.base.constructor;
         var init = delegate(each, [cfg.onBrewScripts, callFn]);
 
+        /**
+         * A list of callback functions which should be called
+         * when brewing a new potion
+         *
+         * @name onBrewScripts
+         * @memberOf Formula
+         * @type Array
+         * @property
+         * @private
+         */
         this.onBrewScripts = cfg.onBrewScripts;
+
+        /**
+         * A list of callback functions which should be called
+         * when disposing the potion
+         *
+         * @name onDisposeScripts
+         * @memberOf Formula
+         * @type Array
+         * @property
+         * @private
+         */
         this.onDisposeScripts = cfg.onDisposeScripts;
 
         this.Ctor = function (args) {
             orgCtor.apply(this, args);
-            init.call(this);
+            init(this);
         };
         this.Ctor.prototype = cfg.base;
     };
@@ -35,8 +56,12 @@ module.exports = (function () {
     };
 
     /**
-     * @param {Object} fn
-     * @return {Formula}
+     * Adds a callback functions which should be called
+     * when brewing a new potion. The function is executed
+     * in the context of the new object
+     *
+     * @param {Object} fn The callback function
+     * @return {Formula} The new formula
      */
     Formula.prototype.whenBrewed = function whenBrewed(fn) {
         return new Formula({
@@ -68,6 +93,9 @@ module.exports = (function () {
         });
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+    // PRIVATE HELPER
+
     /** @private */
     function override(base, overrides) {
         each(overrides, function (prop, key) {
@@ -93,6 +121,10 @@ module.exports = (function () {
 
             for (var key in this) {
                 if (this[key] && typeof this[key] === 'object') {
+                    if (typeof this[key].dispose === 'function') {
+                        this[key].dispose();
+                    }
+
                     this[key] = null;
                 }
             }
@@ -100,7 +132,7 @@ module.exports = (function () {
     }
 
     /**
-     * Wrapps the give value in a potion formula to allow further magic
+     * Wraps the give value in a potion formula to allow further magic
      *
      * @param {Object} base The original basic prototype
      * @return {Formula} the wrapper formula
