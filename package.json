@@ -41,6 +41,7 @@
     "grunt-template-jasmine-nml": "^1.0.0"
   },
   "dependencies": {
-    "pro-singulis": "^1.1.2"
+    "deligare": "^1.1.2",
+    "pro-singulis": "^1.2.0"
   }
 }

@@ -110,7 +110,7 @@ describe('coquo-venenum', function () {
         });
     });
 
-    describe('onInit', function () {
+    describe('whenBrewed', function () {
         it('allows register one or more callbacks on brewing', function () {
             // prepare
             var onInitSpy1 = jasmine.createSpy('onInit1');
@@ -118,13 +118,51 @@ describe('coquo-venenum', function () {
 
             // execute
             coquoVenenum({})
-                .onInit(onInitSpy1)
-                .onInit(onInitSpy2)
+                .whenBrewed(onInitSpy1)
+                .whenBrewed(onInitSpy2)
                 .brew();
 
             // verify
             expect(onInitSpy1).toHaveBeenCalled();
             expect(onInitSpy2).toHaveBeenCalled();
+        });
+    });
+
+    describe('dispose', function () {
+        it('brewed potions can be disposed', function () {
+            var potion = coquoVenenum({}).brew();
+
+            expect(typeof potion.dispose).toBe('function');
+
+            expect(function () {
+                potion.dispose();
+            }).not.toThrow();
+        });
+
+        it('clears object references', function () {
+            // prepare
+            var potion = coquoVenenum({
+                foo: {},
+                text: 'some text'
+            }).extend({
+                bar: []
+            }).extend({
+                baz: {},
+            }).brew({
+                ping: {},
+                pong: []
+            });
+
+            // execute
+            potion.dispose();
+
+            // verify
+            expect(potion.foo).toBeFalsy();
+            expect(potion.bar).toBeFalsy();
+            expect(potion.baz).toBeFalsy();
+            expect(potion.ping).toBeFalsy();
+            expect(potion.pong).toBeFalsy();
+            expect(potion.text).toBe('some text');
         });
     });
 });

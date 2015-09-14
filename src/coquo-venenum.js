@@ -2,25 +2,23 @@ module.exports = (function () {
     'use strict';
 
     var each = require('pro-singulis');
+    var delegate = require('deligare');
 
     /**
      * @class Formula
      */
-    var Formula = function (base, onInitScrips, onDisposeScripts) {
-        var orgCtor = base.constructor;
+    var Formula = function (cfg) {
+        var orgCtor = cfg.base.constructor;
+        var init = delegate(each, [cfg.onBrewScripts, callFn]);
 
-        this.onInitScrips = onInitScrips || [];
-        this.onDisposeScripts = onDisposeScripts || [];
+        this.onBrewScripts = cfg.onBrewScripts;
+        this.onDisposeScripts = cfg.onDisposeScripts;
 
         this.Ctor = function (args) {
             orgCtor.apply(this, args);
-
-            each(onInitScrips, function (fn) {
-                fn.call(this);
-            }, this);
+            init.call(this);
         };
-
-        this.Ctor.prototype = base;
+        this.Ctor.prototype = cfg.base;
     };
 
     /**
@@ -30,15 +28,22 @@ module.exports = (function () {
      * @return {Formula}
      */
     Formula.prototype.brew = function brew(cfg, args) {
-        return override(new this.Ctor(args), cfg);
+        var potion = new this.Ctor(args);
+        potion.dispose = createDisposeFn(Object.keys(cfg || {}));
+        potion = override(potion, cfg);
+        return potion;
     };
 
     /**
      * @param {Object} fn
      * @return {Formula}
      */
-    Formula.prototype.onInit = function onInit(fn) {
-        return new Formula(this.Ctor.prototype, this.onInitScrips.concat(fn), this.onDisposeScripts);
+    Formula.prototype.whenBrewed = function whenBrewed(fn) {
+        return new Formula({
+            base: this.Ctor.prototype,
+            onBrewScripts: this.onBrewScripts.concat(fn),
+            onDisposeScripts: this.onDisposeScripts,
+        });
     };
 
     /**
@@ -56,7 +61,11 @@ module.exports = (function () {
      * @return {Formula} The new and extended potion formula
      */
     Formula.prototype.extend = function (overrides) {
-        return new Formula(this.brew(overrides));
+        return new Formula({
+            base: override(Object.create(this.Ctor.prototype), overrides),
+            onBrewScripts: this.onBrewScripts,
+            onDisposeScripts: this.onDisposeScripts,
+        });
     };
 
     /** @private */
@@ -66,6 +75,28 @@ module.exports = (function () {
         });
 
         return base;
+    }
+
+    /** @private */
+    function callFn(fn) {
+        /* jshint validthis: true */
+        fn.call(this);
+        /* jshint validthis: false */
+    }
+
+    /** @private */
+    function createDisposeFn(foreignProps) {
+        return function dispose() {
+            each(foreignProps, function (prop) {
+                this[prop] = null;
+            }, this);
+
+            for (var key in this) {
+                if (this[key] && typeof this[key] === 'object') {
+                    this[key] = null;
+                }
+            }
+        };
     }
 
     /**
@@ -79,6 +110,10 @@ module.exports = (function () {
             throw 'Base hast be an object, "' + base + '" given';
         }
 
-        return new Formula(Object.create(base));
+        return new Formula({
+            base: Object.create(base),
+            onBrewScripts: [],
+            onDisposeScripts: [],
+        });
     };
 }());
