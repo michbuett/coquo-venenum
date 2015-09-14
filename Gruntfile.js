@@ -44,8 +44,17 @@ module.exports = function (grunt) {
                 src: ['dist/coquo-venenum.js'],
 
                 options: {
-                    keepRunner: true,
                     specs: 'tests/**/*.js',
+                },
+            },
+
+            debug: {
+                src: ['src/**/*.js'],
+
+                options: {
+                    specs: 'tests/**/*.js',
+                    keepRunner: true,
+                    template: require('grunt-template-jasmine-nml'),
                 },
             },
 
@@ -53,7 +62,6 @@ module.exports = function (grunt) {
                 src: ['src/**/*.js'],
 
                 options: {
-                    keepRunner: true,
                     specs: 'tests/**/*.js',
                     template: require('grunt-template-jasmine-istanbul'),
                     templateOptions: {

@@ -138,6 +138,25 @@ describe('coquo-venenum', function () {
             expect(onInitSpy.calls.mostRecent().object).toBe(potion);
         });
 
+        it('executes the callbacks in the correct order', function () {
+            // prepare
+            var test = [];
+
+            // execute
+            coquoVenenum({
+                constructor: function () {
+                    test.push('foo');
+                }
+            }).whenBrewed(function () {
+                test.push('bar');
+            }).whenBrewed(function () {
+                test.push('baz');
+            }).brew();
+
+            // verify
+            expect(test.join(' ')).toBe('foo bar baz');
+        });
+
         it('preserves the prototype chain', function () {
             // prepare
             var base = {};
@@ -212,6 +231,23 @@ describe('coquo-venenum', function () {
             expect(potion.bar).toBeFalsy();
             expect(dispose1).toHaveBeenCalled();
             expect(dispose2).not.toHaveBeenCalled();
+        });
+
+        it('allows register one or more callbacks on disposing', function () {
+            // prepare
+            var spy1 = jasmine.createSpy('spy1');
+            var spy2 = jasmine.createSpy('spy2');
+
+            // execute
+            coquoVenenum({})
+                .whenDisposed(spy1)
+                .whenDisposed(spy2)
+                .brew()
+                .dispose();
+
+            // verify
+            expect(spy1).toHaveBeenCalled();
+            expect(spy2).toHaveBeenCalled();
         });
     });
 });

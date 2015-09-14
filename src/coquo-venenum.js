@@ -50,8 +50,12 @@ module.exports = (function () {
      */
     Formula.prototype.brew = function brew(cfg, args) {
         var potion = new this.Ctor(args);
-        potion.dispose = createDisposeFn(Object.keys(cfg || {}));
+        var foreignProps = Object.keys(cfg || {});
+        var onDispose = delegate(each, [this.onDisposeScripts, callFn]);
+
+        potion.dispose = createDisposeFn(foreignProps, onDispose);
         potion = override(potion, cfg);
+
         return potion;
     };
 
@@ -68,6 +72,23 @@ module.exports = (function () {
             base: this.Ctor.prototype,
             onBrewScripts: this.onBrewScripts.concat(fn),
             onDisposeScripts: this.onDisposeScripts,
+        });
+    };
+
+
+    /**
+     * Adds a callback functions which should be called
+     * when when disposing the potion. The function is
+     * executed in the context of the disposed object
+     *
+     * @param {Object} fn The callback function
+     * @return {Formula} The new formula
+     */
+    Formula.prototype.whenDisposed = function whenDisposed(fn) {
+        return new Formula({
+            base: this.Ctor.prototype,
+            onBrewScripts: this.onBrewScripts,
+            onDisposeScripts: this.onDisposeScripts.concat(fn),
         });
     };
 
@@ -113,8 +134,10 @@ module.exports = (function () {
     }
 
     /** @private */
-    function createDisposeFn(foreignProps) {
+    function createDisposeFn(foreignProps, onDispose) {
         return function dispose() {
+            onDispose(this);
+
             each(foreignProps, function (prop) {
                 this[prop] = null;
             }, this);
