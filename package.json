@@ -1,6 +1,6 @@
 {
   "name": "coquo-venenum",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Brew new prototypes the magic way",
   "main": "src/coquo-venenum.js",
   "scripts": {
