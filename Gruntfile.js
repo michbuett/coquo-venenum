@@ -125,6 +125,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-jasmine-nodejs');
     grunt.loadNpmTasks('grunt-coveralls');
 
+    grunt.registerTask('dev', ['watch']);
+
     grunt.registerTask('test', [
         'jshint',
         'jasmine_nodejs',

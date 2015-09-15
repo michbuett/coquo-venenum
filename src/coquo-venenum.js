@@ -43,18 +43,24 @@ module.exports = (function () {
     };
 
     /**
+     * Creates a new instance of the formula's prototype
      *
-     * @param {Object} [cfg]
-     * @param {Array} [args]
-     * @return {Formula}
+     * @param {Object|Function} [overrides] Optional. A set of properties/overrides
+     *      for the new instance
+     * @param {Array} [args] Optional. An array with constructor arguments
+     * @return {Object} The potion (i.e. the new instance of the formula's prototype)
      */
-    Formula.prototype.brew = function brew(cfg, args) {
+    Formula.prototype.brew = function brew(overrides, args) {
         var potion = new this.Ctor(args);
-        var foreignProps = Object.keys(cfg || {});
+        var foreignProps = Object.keys(overrides || {});
         var onDispose = delegate(each, [this.onDisposeScripts, callFn]);
 
+        if (typeof overrides === 'function') {
+            overrides = overrides(this.Ctor.prototype);
+        }
+
         potion.dispose = createDisposeFn(foreignProps, onDispose);
-        potion = override(potion, cfg);
+        potion = override(potion, overrides);
 
         return potion;
     };
@@ -107,6 +113,10 @@ module.exports = (function () {
      * @return {Formula} The new and extended potion formula
      */
     Formula.prototype.extend = function (overrides) {
+        if (typeof overrides === 'function') {
+            overrides = overrides(this.Ctor.prototype);
+        }
+
         return new Formula({
             base: override(Object.create(this.Ctor.prototype), overrides),
             onBrewScripts: this.onBrewScripts,

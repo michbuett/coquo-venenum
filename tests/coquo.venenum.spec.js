@@ -64,6 +64,27 @@ describe('coquo-venenum', function () {
             // verfiy
             expect(ctor).toHaveBeenCalledWith('arg1', 'arg2', 'arg3');
         });
+
+        it('allows to pass a function which is called with the prototype', function () {
+            // prepare
+            var base = {
+                foo: function () {
+                    return 'foo';
+                },
+            };
+
+            // execute
+            var sub = coquoVenenum(base).brew(function (_super) {
+                return {
+                    foo: function () {
+                        return _super.foo.call(this) + ' - bar';
+                    },
+                };
+            });
+
+            // verify
+            expect(sub.foo()).toBe('foo - bar');
+        });
     });
 
     describe('extend', function () {
@@ -107,6 +128,33 @@ describe('coquo-venenum', function () {
             expect(sub).not.toBe(formula);
             expect(formula.brew().baz).toBe(undefined);
             expect(sub.brew().baz).toBe('baz');
+        });
+
+        it('allows to pass a function which is called with the extendee', function () {
+            // prepare
+            var base = {
+                foo: function () {
+                    return 'foo';
+                },
+            };
+
+            // execute
+            var sub = coquoVenenum(base).extend(function (_super) {
+                return {
+                    foo: function () {
+                        return _super.foo.call(this) + ' - bar';
+                    },
+                };
+            }).extend(function (_super) {
+                return {
+                    foo: function () {
+                        return _super.foo.call(this) + ' - baz';
+                    },
+                };
+            }).brew();
+
+            // verify
+            expect(sub.foo()).toBe('foo - bar - baz');
         });
     });
 
